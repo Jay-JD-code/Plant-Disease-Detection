@@ -1,0 +1,24 @@
+Apple Scab
+Apple Black Rot
+Apple Cedar Rust
+Apple Healthy
+Background
+Corn Leaf Spot
+Corn Rust
+Corn Blight
+Corn Healthy
+Pepper Bacterial Spot
+Pepper Healthy
+Potato Early Blight
+Potato Late Blight
+Potato Healthy
+Tomato Bacterial Spot
+Tomato Early Blight
+Tomato Late Blight
+Tomato Leaf Mold
+Tomato Septoria
+Tomato Spider Mites
+Tomato Target Spot
+Tomato TYLCV
+Tomato Mosaic Virus
+Tomato Healthy

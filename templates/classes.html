@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Plant Classes - Disease Detection{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Header -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-10 text-center">
+            <div class="hero-section">
+                <i class="fas fa-seedling" style="font-size: 3rem;"></i>
+                <h1 class="display-5 fw-bold mt-3 text-plant-green">
+                    Plant Disease Classification
+                </h1>
+                <p class="lead">
+                    Our AI model can detect {{ classes|length }} different plant conditions across multiple species
+                </p>
+                <div class="row justify-content-center mt-4">
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <span class="fw-medium">High Accuracy</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <i class="fas fa-leaf text-success me-2"></i>
+                            <span class="fw-medium">Multiple Species</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <i class="fas fa-microscope text-success me-2"></i>
+                            <span class="fw-medium">AI Powered</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Box -->
+    <div class="row mb-4">
+        <div class="col-md-6 mx-auto">
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" class="form-control" id="searchInput" placeholder="Search plant conditions...">
+            </div>
+        </div>
+    </div>
+
+    <!-- Classes Grid -->
+    <div class="row">
+        {% for class_name in classes %}
+        <div class="col-lg-4 col-md-6 mb-4 class-item">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="me-3">
+                            {% if class_name == 'Background (No Leaves Detected)' %}
+                                <i class="fas fa-exclamation-triangle text-warning" style="font-size: 1.5rem;"></i>
+                            {% elif 'healthy' in class_name.lower() %}
+                                <i class="fas fa-check-circle text-success" style="font-size: 1.5rem;"></i>
+                            {% else %}
+                                <i class="fas fa-bug text-danger" style="font-size: 1.5rem;"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-2">{{ class_name }}</h6>
+                            {% if class_name == 'Background (No Leaves Detected)' %}
+                                <span class="badge bg-warning text-dark">Background</span>
+                            {% elif 'healthy' in class_name.lower() %}
+                                <span class="badge bg-success">Healthy</span>
+                            {% else %}
+                                <span class="badge bg-danger">Disease</span>
+                            {% endif %}
+                            
+                            <!-- Extract plant type -->
+                            {% if ' - ' in class_name %}
+                                {% set plant_type = class_name.split(' - ')[0] %}
+                                <span class="badge bg-secondary ms-1">{{ plant_type }}</span>
+                            {% elif class_name != 'Background (No Leaves Detected)' %}
+                                {% set plant_type = class_name.split(' ')[0] %}
+                                <span class="badge bg-secondary ms-1">{{ plant_type }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card bg-light border-0">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-chart-bar text-info"></i>
+                        Model Statistics
+                    </h5>
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <h3 class="text-primary">{{ stats.total_classes }}</h3>
+                                <p class="text-muted">Total Classes</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <h3 class="text-success">{{ stats.healthy_count }}</h3>
+                                <p class="text-muted">Healthy Conditions</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <h3 class="text-danger">{{ stats.disease_count }}</h3>
+                                <p class="text-muted">Disease Conditions</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <h3 class="text-info">{{ stats.total_classes }}</h3>
+                                <p class="text-muted">Total Model Classes</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="text-center mt-4">
+        <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-arrow-left"></i>
+            Back to Upload
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const classItems = document.querySelectorAll('.class-item');
+        
+        classItems.forEach(item => {
+            const className = item.querySelector('.card-title').textContent.toLowerCase();
+            if (className.includes(searchTerm)) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %}

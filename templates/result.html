@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis Results - Plant Disease Detection{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Page Header -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-lg-10 text-center">
+            <h2 class="fw-bold text-plant-green">
+                <i class="fas fa-microscope"></i>
+                Analysis Results
+            </h2>
+            <p class="text-muted">AI-powered plant disease detection results</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Image Display -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-image"></i>
+                        Uploaded Image
+                    </h5>
+                </div>
+                <div class="card-body text-center p-0">
+                    <div class="image-preview p-3">
+                        <img src="data:image/png;base64,{{ result.image }}" 
+                             alt="{{ result.filename }}" 
+                             class="img-fluid" 
+                             style="max-height: 500px; object-fit: contain;">
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <span class="badge bg-secondary">
+                        <i class="fas fa-file-image"></i>
+                        {{ result.filename }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Display -->
+        <div class="col-lg-6">
+            <!-- Primary Prediction -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line"></i>
+                        Primary Prediction
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Status Icon and Title -->
+                    <div class="text-center mb-4">
+                        {% if result.predicted_class == 'Background (No Leaves Detected)' %}
+                            <div class="prediction-icon text-warning mb-3">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <h3 class="fw-bold text-warning">No Plant Detected</h3>
+                        {% elif 'healthy' in result.predicted_class.lower() %}
+                            <div class="prediction-icon text-success mb-3">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <h3 class="fw-bold text-success">Healthy Plant</h3>
+                        {% else %}
+                            <div class="prediction-icon text-danger mb-3">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                            <h3 class="fw-bold text-danger">Disease Detected</h3>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Prediction Details -->
+                    <div class="text-center mb-4">
+                        <div class="bg-light p-3 rounded">
+                            <h5 class="fw-bold text-plant-green mb-0">{{ result.predicted_class }}</h5>
+                        </div>
+                    </div>
+                    
+                    <!-- Confidence Score -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0">Confidence Level</h6>
+                            <span class="badge bg-success fs-6">{{ result.confidence }}%</span>
+                        </div>
+                        <div class="progress">
+                            {% if result.confidence >= 80 %}
+                                {% set bar_color = 'bg-success' %}
+                            {% elif result.confidence >= 60 %}
+                                {% set bar_color = 'bg-warning' %}
+                            {% else %}
+                                {% set bar_color = 'bg-danger' %}
+                            {% endif %}
+                            <div class="progress-bar {{ bar_color }}" 
+                                 role="progressbar" 
+                                 style="width: '{{ result.confidence }}%'"
+                                 aria-valuenow="{{ result.confidence }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                {{ result.confidence }}%
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Confidence Interpretation -->
+                    {% if result.confidence >= 80 %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-thumbs-up"></i>
+                            <strong>High Confidence:</strong> The model is very confident in this prediction.
+                        </div>
+                    {% elif result.confidence >= 60 %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Medium Confidence:</strong> Consider checking alternative predictions below.
+                        </div>
+                    {% else %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-question-circle"></i>
+                            <strong>Low Confidence:</strong> The model is uncertain. Please review alternatives.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Top 3 Predictions -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-ranking-star"></i>
+                        Alternative Predictions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for class_name, confidence in result.top3_predictions %}
+                        <div class="d-flex justify-content-between align-items-center p-3 {% if loop.first %}bg-light{% endif %} rounded mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <span class="badge {% if loop.first %}bg-success{% else %}bg-secondary{% endif %} rounded-circle" style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">
+                                        {{ loop.index }}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span class="fw-{% if loop.first %}bold{% else %}medium{% endif %}">{{ class_name }}</span>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="badge {% if confidence >= 80 %}bg-success{% elif confidence >= 60 %}bg-warning{% else %}bg-secondary{% endif %} fs-6">
+                                    {{ confidence }}%
+                                </span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center mt-4">
+                <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg me-3">
+                    <i class="fas fa-upload"></i>
+                    Analyze Another Image
+                </a>
+                <a href="{{ url_for('show_classes') }}" class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-list"></i>
+                    View All Classes
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Disease Information -->
+    {% if result.disease_info and result.disease_info.name != 'Unknown Disease' %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-info-circle"></i>
+                        Detailed Analysis: {{ result.disease_info.name }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Disease Overview -->
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5 class="text-plant-green">
+                                <i class="fas fa-leaf"></i>
+                                Disease Overview
+                            </h5>
+                            <p class="lead">{{ result.disease_info.description }}</p>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-6">
+                                    <strong>Plant:</strong> {{ result.disease_info.plant }}
+                                </div>
+                                <div class="col-sm-6">
+                                    <strong>Severity:</strong>
+                                    <span class="badge bg-{{ result.severity_color }}">{{ result.disease_info.severity }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="alert alert-{{ result.severity_color }} text-center">
+                                {% if result.disease_info.severity == 'Healthy' %}
+                                    <i class="fas fa-check-circle fa-3x"></i>
+                                    <h5 class="mt-2">Plant is Healthy!</h5>
+                                {% elif result.disease_info.severity == 'Severe' %}
+                                    <i class="fas fa-exclamation-triangle fa-3x"></i>
+                                    <h5 class="mt-2">Immediate Action Required</h5>
+                                {% else %}
+                                    <i class="fas fa-stethoscope fa-3x"></i>
+                                    <h5 class="mt-2">Treatment Recommended</h5>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Symptoms and Causes -->
+    {% if result.disease_info.symptoms or result.disease_info.causes %}
+    <div class="row mt-4">
+        {% if result.disease_info.symptoms %}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-eye"></i>
+                        Symptoms to Look For
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        {% for symptom in result.disease_info.symptoms %}
+                        <li class="mb-2">
+                            <i class="fas fa-circle text-warning me-2" style="font-size: 0.5rem;"></i>
+                            {{ symptom }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if result.disease_info.causes %}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-search"></i>
+                        Common Causes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        {% for cause in result.disease_info.causes %}
+                        <li class="mb-2">
+                            <i class="fas fa-circle text-info me-2" style="font-size: 0.5rem;"></i>
+                            {{ cause }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Treatment and Supplements -->
+    {% if result.disease_info.supplements or result.disease_info.organic_treatments %}
+    <div class="row mt-4">
+        {% if result.disease_info.organic_treatments %}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-leaf"></i>
+                        Organic Treatment Options
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        {% for treatment in result.disease_info.organic_treatments %}
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            {{ treatment }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if result.disease_info.supplements %}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-pills"></i>
+                        Recommended Supplements
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for supplement in result.disease_info.supplements %}
+                    <div class="supplement-item mb-3 p-3 bg-light rounded">
+                        <h6 class="fw-bold text-plant-green mb-2">
+                            <i class="fas fa-capsules me-2"></i>
+                            {{ supplement.name }}
+                        </h6>
+                        <p class="mb-1"><strong>Usage:</strong> {{ supplement.usage }}</p>
+                        <p class="mb-0 text-muted"><strong>Benefits:</strong> {{ supplement.benefits }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Prevention Tips -->
+    {% if result.disease_info.prevention %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shield-alt"></i>
+                        Prevention Tips
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for prevention in result.disease_info.prevention %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-shield text-primary me-3 mt-1"></i>
+                                <span>{{ prevention }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Professional Consultation Alert -->
+    {% if result.disease_info.severity in ['Severe', 'Moderate to Severe'] %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-warning">
+                <h5 class="alert-heading">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Professional Consultation Recommended
+                </h5>
+                <p class="mb-0">
+                    Given the severity of this condition, we strongly recommend consulting with a plant pathologist, agricultural extension agent, or certified plant health professional for a comprehensive treatment plan. Early intervention can significantly improve treatment outcomes.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    {% if result.predicted_class == 'Background (No Leaves Detected)' %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card border-0 bg-warning bg-opacity-10">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-exclamation-triangle text-warning"></i>
+                        No Plant Leaves Detected
+                    </h5>
+                    <p class="mb-2">
+                        The AI model detected that this image doesn't contain plant leaves or the leaves are not clearly visible.
+                    </p>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-camera"></i>
+                        <strong>Tip:</strong> For best results, please upload a clear image showing plant leaves with good lighting and minimal background distractions.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

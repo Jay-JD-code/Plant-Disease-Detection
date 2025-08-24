@@ -1,0 +1,39 @@
+# Flask web application dependencies
+Flask==2.3.3
+Werkzeug==2.3.7
+
+# PyTorch and computer vision
+torch>=2.0.0
+torchvision>=0.15.0
+Pillow>=10.0.0
+
+# Data science and visualization
+numpy>=1.21.0
+pandas>=1.3.0
+matplotlib>=3.5.0
+seaborn>=0.11.0
+
+# Machine learning metrics
+scikit-learn>=1.0.0
+
+# Jupyter notebook (for confusion matrix analysis)
+jupyter>=1.0.0
+ipykernel>=6.0.0
+
+# Image processing
+opencv-python>=4.5.0
+
+# Optional: GPU support (uncomment if using CUDA)
+# torch-audio  # for additional audio processing if needed
+
+# Development dependencies (optional)
+# pytest>=7.0.0
+# black>=22.0.0
+# flake8>=5.0.0
+
+# Additional utilities
+tqdm>=4.60.0
+requests>=2.25.0
+
+# For better plotting in Jupyter
+ipywidgets>=7.6.0
