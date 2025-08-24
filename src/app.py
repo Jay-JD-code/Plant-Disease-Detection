@@ -9,6 +9,7 @@ import io
 import base64
 import json
 from disease_info import get_disease_info, get_severity_color, format_disease_name
+from demo_predictor import demo_predict_disease, is_demo_mode
 
 # Fix template and static directories to work from any directory
 import os
@@ -220,8 +221,12 @@ def predict():
             img_io.seek(0)
             img_b64 = base64.b64encode(img_io.getvalue()).decode()
             
-            # Make prediction
-            predicted_class, confidence, top3_predictions = predict_disease(image)
+            # Make prediction (use demo mode if real model unavailable)
+            if model is not None:
+                predicted_class, confidence, top3_predictions = predict_disease(image)
+            else:
+                print("🎭 Using demo mode for prediction")
+                predicted_class, confidence, top3_predictions = demo_predict_disease(file.filename)
             
             if predicted_class is None:
                 flash('Error occurred during prediction')
@@ -262,7 +267,13 @@ def api_predict():
     try:
         # Process image
         image = Image.open(io.BytesIO(file.read()))
-        predicted_class, confidence, top3_predictions = predict_disease(image)
+        
+        # Make prediction (use demo mode if real model unavailable)
+        if model is not None:
+            predicted_class, confidence, top3_predictions = predict_disease(image)
+        else:
+            print("🎭 Using demo mode for API prediction")
+            predicted_class, confidence, top3_predictions = demo_predict_disease(file.filename)
         
         if predicted_class is None:
             return jsonify({'error': 'Prediction failed'}), 500
@@ -294,11 +305,15 @@ def show_classes():
     
     return render_template('classes.html', classes=formatted_classes, stats=statistics)
 
+# Load model on import for deployment
+print("Loading model...")
+if not load_model():
+    print("⚠️ Warning: Failed to load model. App will run but predictions will fail.")
+else:
+    print("✅ Model loaded successfully!")
+
 if __name__ == '__main__':
-    # Load model on startup
-    print("Loading model...")
-    if load_model():
-        print("Model loaded successfully!")
-        app.run(debug=True, host='0.0.0.0', port=5000)
-    else:
-        print("Failed to load model. Please check the model file.")
+    # For local development only
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_ENV') == 'development'
+    app.run(debug=debug, host='0.0.0.0', port=port)

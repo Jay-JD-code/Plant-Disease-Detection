@@ -1,0 +1,21 @@
+# Deployment-optimized requirements (smaller package sizes)
+Flask==2.3.3
+Werkzeug==2.3.7
+
+# PyTorch CPU-only version (much smaller for deployment)
+torch>=2.0.0+cpu
+torchvision>=0.15.0+cpu
+--find-links https://download.pytorch.org/whl/torch_stable.html
+
+# Image processing
+Pillow>=10.0.0
+
+# Data science (essential only)
+numpy>=1.21.0
+
+# Production WSGI server
+gunicorn>=21.2.0
+
+# Optional: if you need specific functionality
+# pandas>=1.3.0  # Only if needed for data processing
+# scikit-learn>=1.0.0  # Only if needed for metrics
