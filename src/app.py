@@ -1,7 +1,24 @@
 import os
-import torch
-import torch.nn as nn
-from torchvision import transforms, models
+try:
+    import torch
+    import torch.nn as nn
+    from torchvision import transforms, models
+    TORCH_AVAILABLE = True
+except ImportError:
+    print("🚨 PyTorch not available - running in demo mode")
+    TORCH_AVAILABLE = False
+    # Create dummy classes to prevent import errors
+    class torch:
+        class nn:
+            class Module: pass
+        @staticmethod
+        def device(x): return 'cpu'
+        @staticmethod
+        def cuda(): 
+            class cuda:
+                @staticmethod
+                def is_available(): return False
+            return cuda()
 from PIL import Image
 import numpy as np
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
@@ -50,33 +67,49 @@ CLASS_NAMES = [
 
 # Global variable to store the model
 model = None
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+if TORCH_AVAILABLE:
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+else:
+    device = 'cpu'  # Fallback when PyTorch not available
 
-class CustomPlantDiseaseModel(nn.Module):
-    """Custom model class that matches the saved checkpoint structure"""
-    def __init__(self, num_classes=24):
-        super(CustomPlantDiseaseModel, self).__init__()
-        self.backbone = models.efficientnet_b0(pretrained=False)
-        # Replace the classifier to match saved model structure
-        self.backbone.classifier = nn.Sequential(
-            nn.Dropout(p=0.2, inplace=True),
-            nn.Linear(in_features=1280, out_features=512, bias=True),
-            nn.ReLU(),
-            nn.BatchNorm1d(512),
-            nn.Dropout(p=0.3),
-            nn.Linear(in_features=512, out_features=256, bias=True),
-            nn.ReLU(),
-            nn.BatchNorm1d(256),
-            nn.Dropout(p=0.3),
-            nn.Linear(in_features=256, out_features=num_classes, bias=True)
-        )
-        
-    def forward(self, x):
-        return self.backbone(x)
+# Only define model class if PyTorch is available
+if TORCH_AVAILABLE:
+    class CustomPlantDiseaseModel(nn.Module):
+        """Custom model class that matches the saved checkpoint structure"""
+        def __init__(self, num_classes=24):
+            super(CustomPlantDiseaseModel, self).__init__()
+            self.backbone = models.efficientnet_b0(pretrained=False)
+            # Replace the classifier to match saved model structure
+            self.backbone.classifier = nn.Sequential(
+                nn.Dropout(p=0.2, inplace=True),
+                nn.Linear(in_features=1280, out_features=512, bias=True),
+                nn.ReLU(),
+                nn.BatchNorm1d(512),
+                nn.Dropout(p=0.3),
+                nn.Linear(in_features=512, out_features=256, bias=True),
+                nn.ReLU(),
+                nn.BatchNorm1d(256),
+                nn.Dropout(p=0.3),
+                nn.Linear(in_features=256, out_features=num_classes, bias=True)
+            )
+            
+        def forward(self, x):
+            return self.backbone(x)
+else:
+    # Dummy model class for demo mode
+    class CustomPlantDiseaseModel:
+        def __init__(self, num_classes=24):
+            pass
 
 def load_model():
     """Load the trained EfficientNet model with exact architecture match"""
     global model
+    
+    # If PyTorch not available, skip model loading
+    if not TORCH_AVAILABLE:
+        print("🎭 PyTorch not available - skipping model loading, using demo mode")
+        return False
+    
     try:
         # Try balanced model first (usually better for generalization)
         model_paths = ['balanced_plant_disease_model.pt', 'best_plant_disease_model_90plus.pt']
