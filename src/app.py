@@ -10,7 +10,13 @@ import base64
 import json
 from disease_info import get_disease_info, get_severity_color, format_disease_name
 
-app = Flask(__name__)
+# Fix template and static directories to work from any directory
+import os
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+template_dir = os.path.join(parent_dir, 'templates')
+static_dir = os.path.join(parent_dir, 'static')
+
+app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
 app.secret_key = 'your-secret-key-here'  # Change this to a random secret key
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
