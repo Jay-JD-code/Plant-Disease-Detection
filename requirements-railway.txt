@@ -1,0 +1,10 @@
+# Simplified requirements for Railway deployment
+# No version constraints to avoid hash conflicts
+
+Flask
+Werkzeug
+torch
+torchvision  
+Pillow
+numpy
+gunicorn

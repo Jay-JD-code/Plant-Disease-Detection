@@ -5,10 +5,9 @@ builder = "NIXPACKS"
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
+startCommand = "gunicorn --bind 0.0.0.0:$PORT wsgi:application"
 
 [env]
 FLASK_ENV = "production"
 PYTHONPATH = "."
-
-# Railway handles Python apps with large dependencies better than Vercel
-# Will use the full requirements.txt with PyTorch
+PIP_NO_CACHE_DIR = "1"
