@@ -1,0 +1,22 @@
+# Production requirements with full PyTorch support
+# Use this for Railway, Google Cloud, AWS, DigitalOcean deployments
+
+# Flask web application
+Flask==2.3.3
+Werkzeug==2.3.7
+
+# PyTorch and computer vision (full versions)
+torch>=2.0.0
+torchvision>=0.15.0
+Pillow>=10.0.0
+
+# Data science and visualization
+numpy>=1.21.0
+pandas>=1.3.0
+
+# Production WSGI server
+gunicorn>=21.2.0
+
+# Additional utilities for production
+tqdm>=4.60.0
+requests>=2.25.0

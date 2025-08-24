@@ -1,0 +1,14 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+healthcheckPath = "/"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+
+[env]
+FLASK_ENV = "production"
+PYTHONPATH = "."
+
+# Railway handles Python apps with large dependencies better than Vercel
+# Will use the full requirements.txt with PyTorch

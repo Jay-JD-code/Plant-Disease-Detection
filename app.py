@@ -318,6 +318,26 @@ def api_predict():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/debug')
+def debug_info():
+    """Debug endpoint to check deployment status"""
+    import glob
+    import sys
+    
+    info = {
+        'pytorch_available': TORCH_AVAILABLE,
+        'model_loaded': model is not None,
+        'model_type': str(type(model)) if model else None,
+        'device': str(device),
+        'current_directory': os.getcwd(),
+        'model_files': glob.glob('*.pt'),
+        'all_files': glob.glob('*'),
+        'python_version': sys.version,
+        'torch_version': torch.__version__ if TORCH_AVAILABLE else 'Not available'
+    }
+    
+    return jsonify(info)
+
 @app.route('/classes')
 def show_classes():
     """Display all available classes"""
@@ -336,11 +356,22 @@ def show_classes():
     return render_template('classes.html', classes=formatted_classes, stats=statistics)
 
 # Load model on import for deployment
-print("Loading model...")
+print("🚀 Starting model loading for Railway deployment...")
+print(f"📁 Current working directory: {os.getcwd()}")
+print(f"📦 PyTorch available: {TORCH_AVAILABLE}")
+print(f"💻 Device: {device}")
+
+# List available files for debugging
+import glob
+model_files = glob.glob('*.pt')
+print(f"🔍 Found model files: {model_files}")
+
 if not load_model():
-    print("⚠️ Warning: Failed to load model. App will run but predictions will fail.")
+    print("⚠️ Warning: Failed to load model. App will run in demo mode.")
+    print(f"🎭 Demo mode active - model variable: {model}")
 else:
-    print("✅ Model loaded successfully!")
+    print("✅ Real AI model loaded successfully!")
+    print(f"🤖 Model type: {type(model)}")
 
 if __name__ == '__main__':
     # For local development only

@@ -1,8 +1,19 @@
-# Minimal requirements for Vercel deployment (without PyTorch)
+# Production requirements for Railway deployment with full PyTorch support
 Flask==2.3.3
 Werkzeug==2.3.7
-Pillow>=10.0.0
-numpy>=1.21.0
 
-# NO PyTorch - too large for Vercel
-# App will automatically run in demo mode without PyTorch
+# PyTorch and computer vision (full versions for Railway)
+torch>=2.0.0
+torchvision>=0.15.0
+Pillow>=10.0.0
+
+# Data science and visualization
+numpy>=1.21.0
+pandas>=1.3.0
+
+# Production WSGI server
+gunicorn>=21.2.0
+
+# Additional utilities
+tqdm>=4.60.0
+requests>=2.25.0
