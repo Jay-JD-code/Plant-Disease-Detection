@@ -10,14 +10,20 @@ DEMO_PREDICTIONS = {
     'apple': [
         ('Apple___Apple_scab', 87.5),
         ('Apple___Black_rot', 72.3),
-        ('Apple___healthy', 95.2),
-        ('Apple___Cedar_apple_rust', 68.9)
+        ('Apple___Cedar_apple_rust', 68.9),
+        ('Apple___healthy', 95.2)
     ],
     'tomato': [
         ('Tomato_Early_blight', 89.1),
         ('Tomato_Bacterial_spot', 76.8),
-        ('Tomato_healthy', 92.4),
-        ('Tomato_Late_blight', 84.2)
+        ('Tomato_Late_blight', 84.2),
+        ('Tomato_Leaf_Mold', 79.3),
+        ('Tomato_Septoria_leaf_spot', 73.1),
+        ('Tomato__Target_Spot', 71.4),
+        ('Tomato__Tomato_YellowLeaf__Curl_Virus', 68.7),
+        ('Tomato__Tomato_mosaic_virus', 74.9),
+        ('Tomato_Spider_mites_Two_spotted_spider_mite', 67.2),
+        ('Tomato_healthy', 92.4)
     ],
     'potato': [
         ('Potato___Early_blight', 81.3),
@@ -27,12 +33,24 @@ DEMO_PREDICTIONS = {
     'corn': [
         ('Corn_(maize)___Common_rust_', 79.4),
         ('Corn_(maize)___Northern_Leaf_Blight', 73.2),
+        ('Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot', 75.6),
         ('Corn_(maize)___healthy', 91.8)
     ],
+    'pepper': [
+        ('Pepper__bell___Bacterial_spot', 78.3),
+        ('Pepper__bell___healthy', 89.1)
+    ],
     'default': [
+        ('Tomato_Early_blight', 83.2),
+        ('Apple___Apple_scab', 79.8),
+        ('Potato___Early_blight', 76.4),
+        ('Corn_(maize)___Common_rust_', 74.1),
+        ('Tomato_Bacterial_spot', 81.7),
+        ('Apple___Black_rot', 69.3),
+        ('Tomato_healthy', 88.5),
         ('Apple___healthy', 85.3),
-        ('Tomato_healthy', 82.1),
-        ('Potato___healthy', 87.9)
+        ('Potato___healthy', 87.9),
+        ('Corn_(maize)___healthy', 90.2)
     ]
 }
 
@@ -42,33 +60,49 @@ def demo_predict_disease(image_filename):
     Returns (predicted_class, confidence, top3_predictions) like real model.
     """
     # Add slight delay to simulate model processing
-    time.sleep(random.uniform(0.5, 1.5))
+    time.sleep(random.uniform(0.3, 1.0))
     
     # Try to guess plant type from filename
     filename_lower = image_filename.lower() if image_filename else ""
     
-    if 'apple' in filename_lower:
+    # More aggressive filename detection
+    plant_type = 'default'
+    if any(word in filename_lower for word in ['apple', 'appl']):
         plant_type = 'apple'
-    elif 'tomato' in filename_lower:
+    elif any(word in filename_lower for word in ['tomato', 'tomat', 'tom']):
         plant_type = 'tomato'
-    elif 'potato' in filename_lower:
+    elif any(word in filename_lower for word in ['potato', 'potat', 'pot']):
         plant_type = 'potato'
-    elif 'corn' in filename_lower or 'maize' in filename_lower:
+    elif any(word in filename_lower for word in ['corn', 'maize', 'mai']):
         plant_type = 'corn'
+    elif any(word in filename_lower for word in ['pepper', 'bell', 'pep']):
+        plant_type = 'pepper'
     else:
-        plant_type = 'default'
+        # If no filename clues, randomly pick a plant type for variety
+        plant_types = ['apple', 'tomato', 'potato', 'corn']
+        plant_type = random.choice(plant_types)
     
     # Get predictions for this plant type
-    available_predictions = DEMO_PREDICTIONS[plant_type]
+    available_predictions = DEMO_PREDICTIONS.get(plant_type, DEMO_PREDICTIONS['default'])
     
-    # Randomly select primary prediction and add some noise
-    primary_pred = random.choice(available_predictions)
+    # Weighted selection - prefer diseases over healthy (more interesting for demo)
+    weighted_predictions = []
+    for pred in available_predictions:
+        if 'healthy' in pred[0].lower():
+            # Add healthy predictions once
+            weighted_predictions.append(pred)
+        else:
+            # Add disease predictions multiple times for higher chance
+            weighted_predictions.extend([pred] * 3)
+    
+    # Randomly select primary prediction
+    primary_pred = random.choice(weighted_predictions)
     predicted_class = primary_pred[0]
     base_confidence = primary_pred[1]
     
     # Add random variation to confidence
-    confidence_variation = random.uniform(-5, 5)
-    confidence = max(60, min(98, base_confidence + confidence_variation))
+    confidence_variation = random.uniform(-8, 8)
+    confidence = max(65, min(95, base_confidence + confidence_variation))
     
     # Generate top 3 predictions
     top3_predictions = []
@@ -81,25 +115,27 @@ def demo_predict_disease(image_filename):
     })
     used_classes.add(predicted_class)
     
-    # Add 2 more random predictions with lower confidence
-    remaining_preds = [p for p in available_predictions if p[0] not in used_classes]
-    if len(remaining_preds) < 2:
-        # Add from other categories if needed
-        all_preds = [p for pred_list in DEMO_PREDICTIONS.values() for p in pred_list]
-        remaining_preds.extend([p for p in all_preds if p[0] not in used_classes])
+    # Get all possible predictions for variety
+    all_preds = []
+    for pred_list in DEMO_PREDICTIONS.values():
+        all_preds.extend(pred_list)
     
-    for i in range(2):
-        if remaining_preds:
-            pred = random.choice(remaining_preds)
-            remaining_preds.remove(pred)
-            
-            # Make confidence lower than primary
-            demo_confidence = max(10, min(confidence - 10 - i*5, pred[1] + random.uniform(-10, 5)))
-            
-            top3_predictions.append({
-                'class': pred[0],
-                'confidence': round(demo_confidence, 2)
-            })
+    # Remove duplicates and used classes
+    remaining_preds = [p for p in all_preds if p[0] not in used_classes]
+    
+    # Add 2 more random predictions with decreasing confidence
+    for i in range(min(2, len(remaining_preds))):
+        pred = random.choice(remaining_preds)
+        remaining_preds.remove(pred)
+        
+        # Make confidence significantly lower than primary
+        confidence_drop = random.uniform(15, 30) + (i * 10)
+        demo_confidence = max(8, confidence - confidence_drop)
+        
+        top3_predictions.append({
+            'class': pred[0],
+            'confidence': round(demo_confidence, 2)
+        })
     
     return predicted_class, confidence, top3_predictions
 

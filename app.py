@@ -224,7 +224,9 @@ def format_class_name(class_name):
 @app.route('/')
 def index():
     """Main page with upload form"""
-    return render_template('index.html')
+    # Check if we're in demo mode (model not available)
+    is_demo = model is None
+    return render_template('index.html', demo_mode=is_demo)
 
 @app.route('/predict', methods=['POST'])
 def predict():
