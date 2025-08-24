@@ -1,19 +1,7 @@
-# Production requirements for Railway deployment with full PyTorch support
 Flask==2.3.3
 Werkzeug==2.3.7
-
-# PyTorch and computer vision (compatible versions)
 torch
 torchvision
 Pillow
-
-# Data science and visualization  
 numpy
-pandas
-
-# Production WSGI server
 gunicorn
-
-# Additional utilities
-tqdm
-requests

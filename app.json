@@ -1,0 +1,14 @@
+{
+  "name": "Plant Disease Detection",
+  "description": "AI-powered plant disease detection using EfficientNet",
+  "image": "python:3.9-slim",
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "env": {
+    "FLASK_ENV": "production",
+    "PYTHONPATH": "."
+  }
+}
